@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minecraft Server Status</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="card">
-    <h1 class="gradient-title">ASW SMP</h1>
-    <p id="status">Loading server status...</p>
-    <p id="players"></p>
+  <div class="layout">
+    <div class="card main">
+      <h1 class="gradient-title">ASW SMP</h1>
+    </div>
+
+    <div class="sidebar server-status">
+      <h2>Server Status</h2>
+      <p id="status">Loading server status...</p>
+      <p id="players"></p>
+    </div>
+
+    <div class="sidebar player-list">
+      <h2>Online players:</h2>
+      <ul id="player-list">
+        <li id="no-players">Loading...</li>
+      </ul>
+    </div>
   </div>
 
   <script>
@@ -23,16 +38,39 @@
 
         const statusEl = document.getElementById("status");
         const playersEl = document.getElementById("players");
+        const playersListEl = document.getElementById("player-list");
 
-        if (data.online) {
+        // Clear previous list except during loading
+        if (playersListEl) playersListEl.innerHTML = "";
+
+        if (data && data.online) {
           statusEl.textContent = "Server is ONLINE ✅";
           playersEl.textContent = `Players online: ${data.players.online} / ${data.players.max}`;
+
+          // Populate player list if available
+          if (data.players && Array.isArray(data.players.list) && data.players.list.length) {
+            data.players.list.forEach(name => {
+              const li = document.createElement('li');
+              li.textContent = name;
+              playersListEl.appendChild(li);
+            });
+          } else if (data.players && data.players.online > 0) {
+            // No sample list available, but players are online
+            const li = document.createElement('li');
+            li.textContent = 'Players online (names not available)';
+            playersListEl.appendChild(li);
+          } else {
+            playersListEl.innerHTML = '<li>No players online</li>';
+          }
         } else {
           statusEl.textContent = "Server is OFFLINE ❌";
           playersEl.textContent = "";
+          playersListEl.innerHTML = '<li>Server offline</li>';
         }
       } catch (err) {
         document.getElementById("status").textContent = "Error fetching status ❌";
+        const playersListEl = document.getElementById("player-list");
+        if (playersListEl) playersListEl.innerHTML = '<li>Error loading players</li>';
         console.error(err);
       }
     }
@@ -41,4 +79,5 @@
     setInterval(fetchServerStatus, 30000); // update every 30s
   </script>
 </body>
+
 </html>
