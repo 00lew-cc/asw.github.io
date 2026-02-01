@@ -1,9 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <p>this should display</p>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Server Status</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+  <div class="card">
+    <h1>My Minecraft Server</h1>
+    <p id="status">Loading server status...</p>
+    <p id="players"></p>
+  </div>
+
+  <script>
+    const serverIP = "playasw.com"; // Replace with your server IP or domain
+
+    async function fetchServerStatus() {
+      try {
+        const res = await fetch(`https://api.mcsrvstat.us/2/${serverIP}`);
+        const data = await res.json();
+
+        const statusEl = document.getElementById("status");
+        const playersEl = document.getElementById("players");
+
+        if (data.online) {
+          statusEl.textContent = "Server is ONLINE ✅";
+          playersEl.textContent = `Players online: ${data.players.online} / ${data.players.max}`;
+        } else {
+          statusEl.textContent = "Server is OFFLINE ❌";
+          playersEl.textContent = "";
+        }
+      } catch (err) {
+        document.getElementById("status").textContent = "Error fetching status ❌";
+        console.error(err);
+      }
+    }
+
+    fetchServerStatus();
+    setInterval(fetchServerStatus, 30000); // update every 30s
+  </script>
 </body>
 </html>
