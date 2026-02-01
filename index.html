@@ -2,16 +2,17 @@
 <html lang="en">
 
 <head>
+  <link rel="icon" href="aswicon.png" type="image/png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minecraft Server Status</title>
+  <title>ASW SMP | Server Info</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div class="layout">
     <div class="card main">
-      <h1 class="gradient-title">ASW SMP</h1>
+      <h1 class="gradient-title">MC.PLAYASW.COM</h1>
     </div>
 
     <div class="sidebar server-status">
@@ -44,7 +45,7 @@
         if (playersListEl) playersListEl.innerHTML = "";
 
         if (data && data.online) {
-          statusEl.textContent = "Server is ONLINE ✅";
+          statusEl.textContent = "Up and running✅";
           playersEl.textContent = `Players online: ${data.players.online} / ${data.players.max}`;
 
           // Populate player list if available

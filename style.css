@@ -15,6 +15,14 @@ body {
   padding: 20px;
 }
 
+.clamped-image {
+    width: 100%;       /* scales with container */
+    max-width: 60px;  /* maximum width */
+    max-height: 60px; /* maximum height */
+    height: auto;      /* maintain aspect ratio */
+}
+
+
 .card {
   background-color: #2a2a2a;
   padding: 20px 40px;
