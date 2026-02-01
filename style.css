@@ -1,4 +1,11 @@
 /* style.css */
+
+:root {
+  --color1: #5caeff;
+  --color2: #0051ff;
+}
+
+
 body {
   font-family: Arial, sans-serif;
   background-color: #1e1e1e;
@@ -19,17 +26,17 @@ body {
 }
 
 .gradient-title {
-  background: linear-gradient(90deg, #1E90FF, #00BFFF);
-  background-size: 600% 600%;
+  background: linear-gradient(60deg, var(--color1), var(--color2), var(--color1));
+  background-size: 20% 20%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradientShift 5s ease infinite;
+  animation: gradientScroll 5s linear infinite; /* linear for smooth continuous */
+  text-decoration: underline;
 }
 
-@keyframes gradientShift {
+@keyframes gradientScroll {
   0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 
