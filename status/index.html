@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" href="aswicon.png" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASW SMP | Main</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="layout">
+    <!-- Main Title -->
+    <div class="card main">
+      <a href="/" class="back-button">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Back</span>
+      </a>
+      <h1 class="gradient-title">MC.PLAYASW.COM</h1>
+    </div>
+
+    <!-- Server Status -->
+    <div class="sidebar server-status">
+      <div class="status-container">
+        <h2 id="server-status-header">Server Status</h2>
+        <button id="refresh-btn">Refresh</button>
+      </div>
+      <p id="status" class="status loading" style="margin: 0;">
+        <span class="dot"></span>
+        <span class="label">Checking status</span>
+      </p>
+    </div>
+
+    <!-- Player List -->
+    <div class="sidebar player-list">
+      <div class="status-container">
+        <h2 id="player-header">Online players: 0/0</h2>
+        <button id="refresh-players-btn">Refresh</button>
+      </div>
+      <ul id="player-list">
+        <li id="no-players">Loading...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const serverIP = "mc.playasw.com";
+
+    const statusEl = document.getElementById("status");
+    const labelEl = statusEl.querySelector(".label");
+    const playerHeaderEl = document.getElementById("player-header");
+    const playersListEl = document.getElementById("player-list");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const refreshPlayersBtn = document.getElementById("refresh-players-btn");
+    const USE_FAKE_PLAYERS = true;
+    const buttonCooldowns = 120; // seconds
+
+    // --- UTILS ---
+    function setStatus(state, text) {
+      statusEl.className = `status ${state}`;
+      labelEl.textContent = text;
+    }
+
+    function startCooldown(button, seconds) {
+      let remaining = seconds;
+      button.disabled = true;
+      button.textContent = `Refresh (${remaining})`;
+
+      const interval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          button.textContent = `Refresh (${remaining})`;
+        } else {
+          clearInterval(interval);
+          button.disabled = false;
+          button.textContent = "Refresh";
+        }
+      }, 1000);
+    }
+
+    // --- SERVER STATUS ---
+    async function fetchServerStatus() {
+      setStatus("loading", "Checking status...");
+      const startTime = Date.now();
+
+      try {
+        const res = await fetch(`https://api.mcsrvstat.us/2/${serverIP}`);
+        const data = await res.json();
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+
+        if (data && data.online) {
+          setStatus("online", "No issues");
+          playerHeaderEl.textContent = `Online players: ${data.players.online} / ${data.players.max}`;
+        } else {
+          setStatus("offline", "Server offline");
+          playerHeaderEl.textContent = `Online players: 0 / 0`;
+          playersListEl.innerHTML = "<li>Couldn't fetch player list</li>";
+        }
+
+      } catch (err) {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+
+        setStatus("error", "Status unavailable");
+        playerHeaderEl.textContent = `Online players: 0 / 0`;
+        playersListEl.innerHTML = "<li>Couldn't fetch player list</li>";
+        console.error(err);
+      }
+    }
+
+    // --- PLAYER LIST ---
+
+    async function fetchPlayers() {
+      // Only fetch if server is online
+      if (!statusEl.classList.contains("online")) return;
+
+      playersListEl.innerHTML = "<li>Loading...</li>";
+      playerHeaderEl.textContent = "Online players: ...";
+
+      // Fake delay for realism
+      await new Promise(r => setTimeout(r, 800));
+
+      if (USE_FAKE_PLAYERS) {
+        // --- Fake players for testing ---
+        const fakePlayers = [
+          "Steve", "Alex", "Notch", "Herobrine", "Dream",
+          "Technoblade", "Player123", "MinerGuy", "RedstonePro",
+          "BuilderGal", "PvPKing", "SkyblockFan"
+        ];
+
+        playerHeaderEl.textContent = `Online players: ${fakePlayers.length} / 100`;
+        playersListEl.innerHTML = "";
+
+        fakePlayers.forEach(name => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+        <img src="https://minotar.net/avatar/${name}/32" class="player-face" alt="${name}">
+        ${name}
+      `;
+          playersListEl.appendChild(li);
+        });
+
+        return; // skip real fetch
+      }
+
+      // --- Real API fetch ---
+      const startTime = Date.now();
+
+      try {
+        const res = await fetch(`https://api.mcsrvstat.us/2/${serverIP}`);
+        const data = await res.json();
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+
+        if (data && data.online) {
+          playerHeaderEl.textContent = `Online players: ${data.players.online} / ${data.players.max}`;
+          if (Array.isArray(data.players.list) && data.players.list.length) {
+            playersListEl.innerHTML = "";
+            data.players.list.forEach(name => {
+              const li = document.createElement("li");
+              li.innerHTML = `<img src="https://minotar.net/avatar/${name}/32" class="player-face" alt="${name}">${name}`;
+              playersListEl.appendChild(li);
+            });
+          } else if (data.players.online > 0) {
+            playersListEl.innerHTML = "<li>Players online (names not available)</li>";
+          } else {
+            playersListEl.innerHTML = "<li>No players online</li>";
+          }
+        } else {
+          playersListEl.innerHTML = "<li>Couldn't fetch player list</li>";
+        }
+      } catch (err) {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+        playersListEl.innerHTML = "<li>Couldn't fetch player list</li>";
+        console.error(err);
+      }
+    }
+
+    // --- EVENT LISTENERS ---
+    refreshBtn.addEventListener("click", async () => {
+      await fetchServerStatus();
+
+      // Auto-refresh player list if server online
+      if (statusEl.classList.contains("online")) {
+        await fetchPlayers();
+        startCooldown(refreshBtn, buttonCooldowns);
+        startCooldown(refreshPlayersBtn, buttonCooldowns);
+      } else {
+        startCooldown(refreshBtn, buttonCooldowns);
+      }
+    });
+
+    refreshPlayersBtn.addEventListener("click", async () => {
+      if (!statusEl.classList.contains("online")) {
+        alert("Cannot refresh players: server is offline or status unknown");
+        return;
+      }
+      await fetchPlayers();
+      startCooldown(refreshPlayersBtn, buttonCooldowns);
+    });
+
+    // --- INITIAL LOAD ---
+    (async () => {
+      await fetchServerStatus();
+
+      // If server is online on page load, fetch player list and apply cooldowns
+      if (statusEl.classList.contains("online")) {
+        await fetchPlayers();
+        startCooldown(refreshBtn, buttonCooldowns);
+        startCooldown(refreshPlayersBtn, buttonCooldowns);
+      }
+    })();
+  </script>
+</body>
+
+</html>
