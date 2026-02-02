@@ -56,7 +56,7 @@ p {
 /* ===== GRID LAYOUT ===== */
 .layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* server natural width, player list fills remaining */
   gap: 20px;
   width: 100%;
   max-width: 900px;
@@ -71,54 +71,20 @@ p {
 .sidebar {
   padding: 20px;
   background-color: #242424;
-}
-
-.sidebar h2 {
-  margin: 0 0 10px;
-  font-size: 1.1em;
-  opacity: 0.95;
-}
-
-/* ===== PLAYER LIST ===== */
-#player-list {
-  list-style: none;       /* remove bullets */
-  padding: 0;             /* remove default padding */
-  margin: 0;              /* remove default margin */
   display: flex;
   flex-direction: column;
-  gap: 8px;               /* space between boxes */
-}
-
-#player-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background-color: #333333;
-  margin-bottom: 0;        /* spacing handled by #player-list gap */
-  font-size: 1em;
-  font-weight: 500;
-  color: #f0f0f0;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  width: 100%;             /* fill sidebar width */
   box-sizing: border-box;
 }
 
-#player-list li:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(0,0,0,0.4);
-}
-
-.player-face {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
 /* ===== SERVER STATUS ===== */
+.status-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* refresh button to far right */
+  gap: 10px;
+  margin-top: 0;
+}
+
 .status {
   display: inline-flex;
   align-items: center;
@@ -150,16 +116,9 @@ p {
   100% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
 }
 
-.status-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-/* ===== REFRESH BUTTON ===== */
-#refresh-btn {
+/* ===== REFRESH BUTTONS ===== */
+#refresh-btn,
+#refresh-players-btn {
   padding: 6px 14px;
   border: none;
   border-radius: 8px;
@@ -172,26 +131,111 @@ p {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
-#refresh-btn:hover:not(:disabled) {
+#refresh-btn:hover:not(:disabled),
+#refresh-players-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   filter: brightness(1.1);
   background-color: #505050;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
-#refresh-btn:active:not(:disabled) {
+#refresh-btn:active:not(:disabled),
+#refresh-players-btn:active:not(:disabled) {
   transform: translateY(0px);
   filter: brightness(0.95);
   background-color: #444444;
 }
 
-#refresh-btn:disabled {
+#refresh-btn:disabled,
+#refresh-players-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   filter: brightness(1);
   transform: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   background-color: #3a3a3a;
+}
+
+.sidebar.server-status {
+  height: auto;          /* natural height */
+  max-height: none;      /* ignore player list height */
+  align-self: start;     /* don’t stretch in grid/flex */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* stick content to top */
+}
+
+/* ===== PLAYER LIST ===== */
+.sidebar.player-list {
+  flex: 1 1 auto;
+  max-height: 400px;        /* cap sidebar height */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.player-list .status-container {
+  flex: 0 0 auto;           /* header stays natural height */
+  margin-bottom: 10px;
+}
+
+#player-header {
+  font-size: 1.1em;       /* same as before */
+  font-weight: 600;       /* match your style */
+  margin: 0 0 10px 0;     /* spacing below */
+  opacity: 0.95;          /* subtle like sidebar h2 */
+}
+
+#player-list {
+  flex: 1 1 auto;           /* fill remaining space */
+  overflow-y: auto;         /* scroll if content exceeds max height */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#player-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: #333333;
+  font-size: 1em;
+  font-weight: 500;
+  color: #f0f0f0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#player-list li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.4);
+}
+
+.player-face {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Scrollbar styling */
+#player-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#player-list::-webkit-scrollbar-thumb {
+  background-color: #505050;
+  border-radius: 4px;
+}
+
+#player-list::-webkit-scrollbar-track {
+  background: #242424;
 }
 
 /* ===== MOBILE STACK ===== */
