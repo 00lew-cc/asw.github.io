@@ -73,9 +73,10 @@
           playerHeaderEl.textContent = `Online players: ${data.players.online} / ${data.players.max}`;
 
           if (data.players && Array.isArray(data.players.list) && data.players.list.length) {
+            playersListEl.innerHTML = ""; // clear old list
             data.players.list.forEach(name => {
               const li = document.createElement('li');
-              li.textContent = name;
+              li.innerHTML = `<img src="https://minotar.net/avatar/${name}/32" class="player-face" alt="${name}">${name}`;
               playersListEl.appendChild(li);
             });
           } else if (data.players && data.players.online > 0) {
@@ -83,6 +84,7 @@
           } else {
             playersListEl.innerHTML = "<li>No players online</li>";
           }
+
         } else {
           setStatus("offline", "Server offline");
           playerHeaderEl.textContent = `Online players: 0 / 0`;
