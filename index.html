@@ -11,18 +11,27 @@
 
 <body>
   <div class="layout">
+    <!-- Main Title -->
     <div class="card main">
       <h1 class="gradient-title">MC.PLAYASW.COM</h1>
     </div>
 
+    <!-- Server Status -->
     <div class="sidebar server-status">
       <h2>Server Status</h2>
-      <p id="status">Loading server status...</p>
-      <p id="players"></p>
+      <div class="status-container">
+        <p id="status" class="status loading">
+          <span class="dot"></span>
+          <span class="label">Checking status</span>
+        </p>
+        <button id="refresh-btn">Refresh</button>
+      </div>
     </div>
 
+
+    <!-- Player List -->
     <div class="sidebar player-list">
-      <h2>Online players:</h2>
+      <h2 id="player-header">Online players: 0/0</h2>
       <ul id="player-list">
         <li id="no-players">Loading...</li>
       </ul>
@@ -30,25 +39,39 @@
   </div>
 
   <script>
-    const serverIP = "mc.playasw.com"; // Replace with your server IP or domain
+    const serverIP = "mc.playasw.com";
 
+    const statusEl = document.getElementById("status");
+    const labelEl = statusEl.querySelector(".label");
+    const playerHeaderEl = document.getElementById("player-header");
+    const playersListEl = document.getElementById("player-list");
+
+    function setStatus(state, text) {
+      statusEl.className = `status ${state}`;
+      labelEl.textContent = text;
+    }
     async function fetchServerStatus() {
+      setStatus("loading", "Checking status...");
+
+      const startTime = Date.now(); // track when fetch starts
+
       try {
         const res = await fetch(`https://api.mcsrvstat.us/2/${serverIP}`);
         const data = await res.json();
 
-        const statusEl = document.getElementById("status");
-        const playersEl = document.getElementById("players");
-        const playersListEl = document.getElementById("player-list");
+        // Ensure minimum 1 second
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) {
+          await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+        }
 
-        // Clear previous list except during loading
-        if (playersListEl) playersListEl.innerHTML = "";
+        // Clear previous player list
+        playersListEl.innerHTML = "";
 
         if (data && data.online) {
-          statusEl.textContent = "Up and running✅";
-          playersEl.textContent = `Players online: ${data.players.online} / ${data.players.max}`;
+          setStatus("online", "No issues");
+          playerHeaderEl.textContent = `Online players: ${data.players.online} / ${data.players.max}`;
 
-          // Populate player list if available
           if (data.players && Array.isArray(data.players.list) && data.players.list.length) {
             data.players.list.forEach(name => {
               const li = document.createElement('li');
@@ -56,28 +79,54 @@
               playersListEl.appendChild(li);
             });
           } else if (data.players && data.players.online > 0) {
-            // No sample list available, but players are online
-            const li = document.createElement('li');
-            li.textContent = 'Players online (names not available)';
-            playersListEl.appendChild(li);
+            playersListEl.innerHTML = "<li>Players online (names not available)</li>";
           } else {
-            playersListEl.innerHTML = '<li>No players online</li>';
+            playersListEl.innerHTML = "<li>No players online</li>";
           }
         } else {
-          statusEl.textContent = "Server is OFFLINE ❌";
-          playersEl.textContent = "";
-          playersListEl.innerHTML = '<li>Server offline</li>';
+          setStatus("offline", "Server offline");
+          playerHeaderEl.textContent = `Online players: 0 / 0`;
+          playersListEl.innerHTML = "<li>Server offline</li>";
         }
       } catch (err) {
-        document.getElementById("status").textContent = "Error fetching status ❌";
-        const playersListEl = document.getElementById("player-list");
-        if (playersListEl) playersListEl.innerHTML = '<li>Error loading players</li>';
+        // Ensure minimum 1 second even on error
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+
+        setStatus("error", "Status unavailable");
+        playerHeaderEl.textContent = `Online players: 0 / 0`;
+        playersListEl.innerHTML = "<li>Error loading players</li>";
         console.error(err);
       }
     }
 
+
+    const refreshBtn = document.getElementById("refresh-btn");
+
+    refreshBtn.addEventListener("click", () => {
+      fetchServerStatus(); // Immediately fetch status
+      startCooldown(30);  // Start 30s cooldown
+    });
+
+    function startCooldown(seconds) {
+      let remaining = seconds;
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = `Refresh (${remaining})`;
+
+      const interval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          refreshBtn.textContent = `Refresh (${remaining})`;
+        } else {
+          clearInterval(interval);
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = "Refresh";
+        }
+      }, 1000);
+    }
+
+
     fetchServerStatus();
-    setInterval(fetchServerStatus, 30000); // update every 30s
   </script>
 </body>
 
